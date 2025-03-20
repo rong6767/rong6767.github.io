@@ -5,12 +5,14 @@
      * @param {Object} options - 可选参数
      *   @property {number} [cellSize=10] - 每个网格单元的边长，决定颗粒大小
      *   @property {string} [bgColor='white'] - 背景颜色
+     *   @property {string} [customDotColor] - 自定义圆点颜色，如果提供，将覆盖原始颜色
      * @returns {HTMLCanvasElement} 转换后的 canvas 元素
      */
     function halftoneEffectColor(img, options) {
       options = options || {};
       var cellSize = options.cellSize || 10;
       var bgColor = options.bgColor || 'white';
+      var customDotColor = options.customDotColor;
   
       var width = img.naturalWidth || img.width;
       var height = img.naturalHeight || img.height;
@@ -19,6 +21,12 @@
       var canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
+      // 设置样式确保居中显示
+      canvas.style.maxWidth = '100%';
+      canvas.style.height = 'auto';
+      canvas.style.display = 'block';
+      canvas.style.margin = '0 auto';
+      
       var ctx = canvas.getContext('2d');
   
       // 将原图绘制到 canvas 上
@@ -67,10 +75,16 @@
           var ratio = 1 - avgLuminance / 255;
           var radius = ratio * (cellSize / 2);
   
-          // 使用平均颜色填充圆点
+          // 使用平均颜色或自定义颜色填充圆点
           ctx.beginPath();
           ctx.arc(x + cellSize / 2, y + cellSize / 2, radius, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgb(' + avgR + ',' + avgG + ',' + avgB + ')';
+          
+          if (customDotColor) {
+            ctx.fillStyle = customDotColor;
+          } else {
+            ctx.fillStyle = 'rgb(' + avgR + ',' + avgG + ',' + avgB + ')';
+          }
+          
           ctx.fill();
         }
       }

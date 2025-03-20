@@ -13,12 +13,24 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow: hidden; /* 防止滚动条出现 */
+    }
+    #output {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: calc(100% - 40px); /* 减去ticker的高度 */
+      margin-top: 40px; /* 为ticker留出空间 */
+      box-sizing: border-box;
     }
     canvas {
       cursor: pointer;
       max-width: 90%;
       max-height: 90%;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      display: block;
+      margin: 0 auto; /* 确保水平居中 */
     }
     .ticker-wrap {
       overflow: hidden;
@@ -92,12 +104,18 @@
       img.onload = function() {
         // 选择当前图像的 dot 颜色：从 dotColors 数组中循环选择
         var dotColor = dotColors[index % dotColors.length];
+        
+        // 计算屏幕宽度，以便在移动设备上调整cellSize
+        var screenWidth = window.innerWidth;
+        var adjustedCellSize = screenWidth < 768 ? 6 : 10; // 移动设备上使用更小的cellSize
+        
         // 调用 halftoneEffectColor，传入自定义 dot 颜色，使得整张图片都使用同一种颜色
         var canvas = halftoneEffectColor(img, {
-          cellSize: 10,         // 可根据需要调整颗粒大小
+          cellSize: adjustedCellSize,
           bgColor: 'white',
           customDotColor: dotColor
         });
+        
         // 清空旧内容并显示新 canvas
         outputDiv.innerHTML = "";
         outputDiv.appendChild(canvas);
@@ -110,6 +128,9 @@
       };
       img.onerror = function() {
         console.error('图片加载失败：' + photos[index]);
+        // 尝试加载下一张图片
+        currentIndex = (currentIndex + 1) % photos.length;
+        showHalftonePhoto(currentIndex);
       };
     }
 
