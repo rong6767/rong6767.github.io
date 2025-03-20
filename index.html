@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Have you met Lucky?</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      cursor: pointer;
+      max-width: 90%;
+      max-height: 90%;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    .ticker-wrap {
+      overflow: hidden;
+      background: #222;
+      color: #fff;
+      white-space: nowrap;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 10px 0;
+      z-index: 1000;
+    }
+    .ticker {
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker 15s linear infinite;
+      /* 更换字体 */
+      font-family: 'Courier Prime', monospace;
+    }
+    @keyframes ticker {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="output"></div>
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span>🐕 她叫Lucky 🐕&nbsp;&nbsp;</span>
+      <span>🐕 Her name is Lucky 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 彼女の名前はラッキーです 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 그녀의 이름은 럭키입니다 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 Elle s'appelle Lucky 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 Se llama Lucky 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 她叫Lucky 🐕&nbsp;&nbsp;</span>
+      <span>🐕 Her name is Lucky 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 彼女の名前はラッキーです 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 그녀의 이름은 럭키입니다 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 Elle s'appelle Lucky 🐕 &nbsp;&nbsp;</span>
+      <span>🐕 Se llama Lucky 🐕 &nbsp;&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- 引入 halftone.js（确保该文件与 index.html 同目录） -->
+  <script src="halftone.js"></script>
+  <script>
+    // 定义照片列表（确保这些图片已经上传到仓库）
+    var photos = [
+      'photo1.jpg',
+      'photo2.jpg',
+      'photo3.jpg'
+      // 可继续添加更多图片
+    ];
+
+    // 定义预设的七种颜色
+    var dotColors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+
+    var currentIndex = 0;
+    var outputDiv = document.getElementById('output');
+
+    // 根据当前索引加载照片，并使用 halftone.js 进行处理
+    function showHalftonePhoto(index) {
+      var img = new Image();
+      img.src = photos[index];
+      img.onload = function() {
+        // 选择当前图像的 dot 颜色：从 dotColors 数组中循环选择
+        var dotColor = dotColors[index % dotColors.length];
+        // 调用 halftoneEffectColor，传入自定义 dot 颜色，使得整张图片都使用同一种颜色
+        var canvas = halftoneEffectColor(img, {
+          cellSize: 10,         // 可根据需要调整颗粒大小
+          bgColor: 'white',
+          customDotColor: dotColor
+        });
+        // 清空旧内容并显示新 canvas
+        outputDiv.innerHTML = "";
+        outputDiv.appendChild(canvas);
+
+        // 点击 canvas 切换到下一张照片
+        canvas.addEventListener('click', function() {
+          currentIndex = (currentIndex + 1) % photos.length;
+          showHalftonePhoto(currentIndex);
+        });
+      };
+      img.onerror = function() {
+        console.error('图片加载失败：' + photos[index]);
+      };
+    }
+
+    // 页面加载完成后显示第一张照片
+    window.onload = function() {
+      showHalftonePhoto(currentIndex);
+    };
+  </script>
+</body>
+</html>
