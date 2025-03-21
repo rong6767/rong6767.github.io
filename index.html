@@ -3,145 +3,188 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Have you met Lucky?</title>
+  <title>Xin Terminal</title>
   <style>
     body, html {
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden; /* 防止滚动条出现 */
-    }
-    #output {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      height: calc(100% - 40px); /* 减去ticker的高度 */
-      margin-top: 40px; /* 为ticker留出空间 */
-      box-sizing: border-box;
-    }
-    canvas {
-      cursor: pointer;
-      max-width: 90%;
-      max-height: 90%;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      display: block;
-      margin: 0 auto; /* 确保水平居中 */
-    }
-    .ticker-wrap {
+      background-color: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
       overflow: hidden;
-      background: #222;
-      color: #fff;
+    }
+    
+    #terminal {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    
+    #output {
+      margin-bottom: 10px;
+    }
+    
+    #output div {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    
+    #prompt-container {
+      display: flex;
+      align-items: center;
       white-space: nowrap;
-      position: fixed;
+    }
+    
+    #prompt-text {
+      color: #0f0;
+    }
+    
+    #input-container {
+      position: relative;
+      display: inline-block;
+      margin-left: 8px;
+    }
+    
+    #input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      padding: 0;
+      width: 100%;
+    }
+    
+    #cursor {
+      position: absolute;
+      width: 10px;
+      height: 20px;
+      background-color: #0f0;
       top: 0;
       left: 0;
-      width: 100%;
-      padding: 10px 0;
-      z-index: 1000;
+      animation: blink 1s step-end infinite;
+      pointer-events: none;
     }
-    .ticker {
-      display: inline-block;
-      padding-left: 100%;
-      animation: ticker 15s linear infinite;
-      /* 更换字体 */
-      font-family: 'Courier Prime', monospace;
-    }
-    @keyframes ticker {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <div id="output"></div>
-  <div class="ticker-wrap">
-    <div class="ticker">
-      <span>🐕 她叫Lucky 🐕&nbsp;&nbsp;</span>
-      <span>🐕 Her name is Lucky 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 彼女の名前はラッキーです 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 그녀의 이름은 럭키입니다 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 Elle s'appelle Lucky 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 Se llama Lucky 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 她叫Lucky 🐕&nbsp;&nbsp;</span>
-      <span>🐕 Her name is Lucky 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 彼女の名前はラッキーです 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 그녀의 이름은 럭키입니다 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 Elle s'appelle Lucky 🐕 &nbsp;&nbsp;</span>
-      <span>🐕 Se llama Lucky 🐕 &nbsp;&nbsp;</span>
+  <div id="terminal">
+    <div id="output"></div>
+    <div id="prompt-container">
+      <span id="prompt-text">$ Xin-HomePage></span>
+      <div id="input-container">
+        <input type="text" id="input" autofocus>
+        <div id="cursor"></div>
+      </div>
     </div>
   </div>
 
-  <!-- 引入 halftone.js（确保该文件与 index.html 同目录） -->
-  <script src="halftone.js"></script>
   <script>
-    // 定义照片列表（确保这些图片已经上传到仓库）
-    var photos = [
-      'photo1.jpg',
-      'photo2.jpg',
-      'photo3.jpg',
-      'photo4.jpg',
-      'photo5.jpg',
-      'photo6.jpg',
-      'photo7.jpg'
-      // 可继续添加更多图片
-    ];
-
-    // 定义预设的七种颜色
-    var dotColors = ['red', 'orange', 'green', 'blue', 'indigo', 'violet'];
-
-    var currentIndex = 0;
-    var outputDiv = document.getElementById('output');
-
-    // 根据当前索引加载照片，并使用 halftone.js 进行处理
-    function showHalftonePhoto(index) {
-      var img = new Image();
-      img.src = photos[index];
-      img.onload = function() {
-        // 选择当前图像的 dot 颜色：从 dotColors 数组中循环选择
-        var dotColor = dotColors[index % dotColors.length];
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('input');
+      const cursor = document.getElementById('cursor');
+      const output = document.getElementById('output');
+      const promptContainer = document.getElementById('prompt-container');
+      
+      // 预定义的有效页面列表
+      const validPages = ['lucky'];
+      
+      // 让输入框始终保持焦点
+      input.focus();
+      document.addEventListener('click', function() {
+        input.focus();
+      });
+      
+      // 更新光标位置，让它跟随输入文本
+      function updateCursorPosition() {
+        // 创建临时span元素计算文本宽度
+        const span = document.createElement('span');
+        span.style.visibility = 'hidden';
+        span.style.position = 'absolute';
+        span.style.whiteSpace = 'pre';
+        span.style.font = window.getComputedStyle(input).font;
+        span.textContent = input.value.substring(0, input.selectionStart);
+        document.body.appendChild(span);
         
-        // 计算屏幕宽度，以便在移动设备上调整cellSize
-        var screenWidth = window.innerWidth;
-        var adjustedCellSize = screenWidth < 768 ? 6 : 10; // 移动设备上使用更小的cellSize
+        // 设置光标位置
+        cursor.style.left = span.offsetWidth + 'px';
         
-        // 调用 halftoneEffectColor，传入自定义 dot 颜色，使得整张图片都使用同一种颜色
-        var canvas = halftoneEffectColor(img, {
-          cellSize: adjustedCellSize,
-          bgColor: 'white',
-          customDotColor: dotColor
-        });
+        // 清理临时元素
+        document.body.removeChild(span);
+      }
+      
+      // 添加命令输出到终端
+      function addOutput(text) {
+        const outputLine = document.createElement('div');
+        outputLine.textContent = text;
+        output.appendChild(outputLine);
+        // 滚动到底部
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+      
+      // 添加当前命令行到历史记录
+      function addCommandToHistory(command) {
+        const commandLine = document.createElement('div');
+        commandLine.textContent = `$ Xin-HomePage> ${command}`;
+        output.appendChild(commandLine);
+      }
+      
+      // 处理命令
+      function processCommand(command) {
+        if (!command) return;
         
-        // 清空旧内容并显示新 canvas
-        outputDiv.innerHTML = "";
-        outputDiv.appendChild(canvas);
-
-        // 点击 canvas 切换到下一张照片
-        canvas.addEventListener('click', function() {
-          currentIndex = (currentIndex + 1) % photos.length;
-          showHalftonePhoto(currentIndex);
-        });
-      };
-      img.onerror = function() {
-        console.error('图片加载失败：' + photos[index]);
-        // 尝试加载下一张图片
-        currentIndex = (currentIndex + 1) % photos.length;
-        showHalftonePhoto(currentIndex);
-      };
-    }
-
-    // 页面加载完成后显示第一张照片
-    window.onload = function() {
-      showHalftonePhoto(currentIndex);
-    };
+        addCommandToHistory(command);
+        
+        const parts = command.split(' ');
+        const cmd = parts[0].toLowerCase();
+        
+        if (cmd === 'cd') {
+          if (parts.length < 2) {
+            addOutput('cd: missing operand');
+          } else {
+            const target = parts[1].toLowerCase();
+            if (validPages.includes(target)) {
+              // 跳转到目标页面
+              window.location.href = `${target}.html`;
+            } else {
+              addOutput(`cd: ${target}: No such file or directory`);
+            }
+          }
+        } else {
+          addOutput(`${command}: command not found`);
+        }
+        
+        // 清空输入并重置
+        input.value = '';
+        updateCursorPosition();
+      }
+      
+      // 监听输入变化和光标位置变化
+      input.addEventListener('input', updateCursorPosition);
+      input.addEventListener('click', updateCursorPosition);
+      input.addEventListener('keyup', updateCursorPosition);
+      input.addEventListener('keydown', function(e) {
+        // 短暂延迟更新光标位置，确保在按键处理后更新
+        setTimeout(updateCursorPosition, 0);
+        
+        if (e.key === 'Enter') {
+          const command = input.value.trim();
+          processCommand(command);
+        }
+      });
+      
+      // 初始化光标位置
+      updateCursorPosition();
+    });
   </script>
 </body>
 </html>
