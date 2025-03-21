@@ -41,6 +41,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
     .back-button {
@@ -94,16 +95,42 @@
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       debugInfo.textContent = `设备: ${isIOS ? 'iOS' : '非iOS'}, 方向API: ${window.DeviceOrientationEvent ? '支持' : '不支持'}`;
       
-      // 移除瞳孔的transition以实现即时响应
-      [leftPupil, rightPupil].forEach(pupil => {
-        pupil.style.transition = 'none';
-      });
-      
       // 最大移动范围（像素）
       const maxMovement = 25;
       
       // 灵敏度系数 - 数值越大，对小幅度移动越敏感
-      const sensitivityFactor = 2.5;
+      const sensitivityFactor = 2.0;
+      
+      // 添加物理模拟参数
+      let currentPosition = { x: 0, y: 0 }; // 当前位置
+      let targetPosition = { x: 0, y: 0 };  // 目标位置
+      let velocity = { x: 0, y: 0 };        // 速度
+      const springStrength = 0.2;           // 弹簧强度
+      const damping = 0.7;                  // 阻尼系数
+      
+      // 设置动画循环
+      function updateEyePositions() {
+        // 计算加速度 (弹簧加速度)
+        const accelerationX = (targetPosition.x - currentPosition.x) * springStrength;
+        const accelerationY = (targetPosition.y - currentPosition.y) * springStrength;
+        
+        // 更新速度 (加入阻尼)
+        velocity.x = velocity.x * damping + accelerationX;
+        velocity.y = velocity.y * damping + accelerationY;
+        
+        // 更新位置
+        currentPosition.x += velocity.x;
+        currentPosition.y += velocity.y;
+        
+        // 应用位置到两个瞳孔
+        updatePupils(currentPosition.x, currentPosition.y);
+        
+        // 继续动画循环
+        requestAnimationFrame(updateEyePositions);
+      }
+      
+      // 启动动画循环
+      updateEyePositions();
       
       // 处理鼠标移动
       document.addEventListener('mousemove', function(e) {
@@ -182,10 +209,14 @@
         moveEyes(x, y);
       }
       
-      // 移动眼睛函数
+      // 更新目标位置
       function moveEyes(mouseX, mouseY) {
         // 记录最后一次鼠标交互时间
         window.lastMouseInteraction = Date.now();
+        
+        // 保存平均目标值
+        let totalMoveX = 0;
+        let totalMoveY = 0;
         
         // 对每只眼睛进行处理
         eyes.forEach((eye, index) => {
@@ -206,12 +237,30 @@
           const moveX = Math.cos(angle) * maxMovement * distance;
           const moveY = Math.sin(angle) * maxMovement * distance;
           
-          // 获取对应的瞳孔元素
-          const pupil = index === 0 ? leftPupil : rightPupil;
-          
-          // 设置瞳孔位置
-          pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+          totalMoveX += moveX;
+          totalMoveY += moveY;
         });
+        
+        // 设置全局目标位置（取平均值）
+        targetPosition.x = totalMoveX / eyes.length;
+        targetPosition.y = totalMoveY / eyes.length;
+      }
+      
+      // 实际更新瞳孔位置的函数
+      function updatePupils(moveX, moveY) {
+        // 左眼偏移量
+        const leftOffsetX = moveX - 5;
+        const leftOffsetY = moveY;
+        
+        // 右眼偏移量
+        const rightOffsetX = moveX + 5;
+        const rightOffsetY = moveY;
+        
+        // 设置左瞳孔位置
+        leftPupil.style.transform = `translate(calc(-50% + ${leftOffsetX}px), calc(-50% + ${leftOffsetY}px))`;
+        
+        // 设置右瞳孔位置
+        rightPupil.style.transform = `translate(calc(-50% + ${rightOffsetX}px), calc(-50% + ${rightOffsetY}px))`;
       }
     });
   </script>
