@@ -82,6 +82,19 @@
       const rightPupil = document.getElementById('right-pupil');
       const eyes = document.querySelectorAll('.eye');
       
+      // 添加调试信息区域
+      const debugInfo = document.createElement('div');
+      debugInfo.style.position = 'absolute';
+      debugInfo.style.bottom = '10px';
+      debugInfo.style.left = '10px';
+      debugInfo.style.color = 'rgba(255, 255, 255, 0.5)';
+      debugInfo.style.fontSize = '10px';
+      document.body.appendChild(debugInfo);
+      
+      // 检测iOS设备
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      debugInfo.textContent = `设备: ${isIOS ? 'iOS' : '非iOS'}, 方向API: ${window.DeviceOrientationEvent ? '支持' : '不支持'}`;
+      
       // 最大移动范围（像素）
       const maxMovement = 25;
       
@@ -92,7 +105,46 @@
       
       // 检测是否支持设备方向
       if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', handleOrientation);
+        // iOS 13+需要请求权限
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          // 创建一个按钮用于请求权限
+          const permissionBtn = document.createElement('button');
+          permissionBtn.innerText = '启用陀螺仪跟踪';
+          permissionBtn.style.position = 'absolute';
+          permissionBtn.style.bottom = '30px';
+          permissionBtn.style.left = '50%';
+          permissionBtn.style.transform = 'translateX(-50%)';
+          permissionBtn.style.padding = '10px 15px';
+          permissionBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+          permissionBtn.style.color = '#fff';
+          permissionBtn.style.border = 'none';
+          permissionBtn.style.borderRadius = '5px';
+          permissionBtn.style.fontFamily = "'Courier New', monospace";
+          permissionBtn.style.cursor = 'pointer';
+          document.body.appendChild(permissionBtn);
+          
+          permissionBtn.addEventListener('click', function() {
+            debugInfo.textContent += ', 正在请求权限...';
+            DeviceOrientationEvent.requestPermission()
+              .then(permissionState => {
+                debugInfo.textContent += `, 权限: ${permissionState}`;
+                if (permissionState === 'granted') {
+                  window.addEventListener('deviceorientation', handleOrientation);
+                  permissionBtn.style.display = 'none';
+                }
+              })
+              .catch(error => {
+                debugInfo.textContent += `, 错误: ${error.message}`;
+                console.error(error);
+              });
+          });
+        } else {
+          // 非iOS设备，直接添加事件监听
+          window.addEventListener('deviceorientation', handleOrientation);
+          debugInfo.textContent += ', 自动监听方向事件';
+        }
+      } else {
+        debugInfo.textContent += ', 设备不支持方向事件';
       }
       
       // 处理设备方向变化
@@ -107,6 +159,9 @@
         const gamma = event.gamma; // 左右倾斜 (-90 到 90)
         
         if (beta === null || gamma === null) return;
+        
+        // 更新调试信息
+        debugInfo.textContent = `beta: ${beta.toFixed(1)}, gamma: ${gamma.toFixed(1)}`;
         
         // 将设备方向映射到视口位置
         const x = window.innerWidth / 2 + (gamma / 90) * window.innerWidth / 2;
