@@ -41,7 +41,6 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      transition: all 0.05s ease-out;
     }
     
     .back-button {
@@ -95,8 +94,16 @@
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       debugInfo.textContent = `设备: ${isIOS ? 'iOS' : '非iOS'}, 方向API: ${window.DeviceOrientationEvent ? '支持' : '不支持'}`;
       
+      // 移除瞳孔的transition以实现即时响应
+      [leftPupil, rightPupil].forEach(pupil => {
+        pupil.style.transition = 'none';
+      });
+      
       // 最大移动范围（像素）
       const maxMovement = 25;
+      
+      // 灵敏度系数 - 数值越大，对小幅度移动越敏感
+      const sensitivityFactor = 2.5;
       
       // 处理鼠标移动
       document.addEventListener('mousemove', function(e) {
@@ -150,7 +157,7 @@
       // 处理设备方向变化
       function handleOrientation(event) {
         // 如果有鼠标交互过，则不响应设备方向
-        if (window.lastMouseInteraction && Date.now() - window.lastMouseInteraction < 5000) {
+        if (window.lastMouseInteraction && Date.now() - window.lastMouseInteraction < 1000) {
           return;
         }
         
@@ -163,9 +170,14 @@
         // 更新调试信息
         debugInfo.textContent = `beta: ${beta.toFixed(1)}, gamma: ${gamma.toFixed(1)}`;
         
+        // 更灵敏的映射，使小幅度晃动也能产生更明显的效果
+        // 应用灵敏度系数增强效果
+        const enhancedGamma = Math.sign(gamma) * Math.pow(Math.abs(gamma)/90, 0.7) * 90 * sensitivityFactor;
+        const enhancedBeta = Math.sign(beta) * Math.pow(Math.abs(beta)/180, 0.7) * 180 * sensitivityFactor;
+        
         // 将设备方向映射到视口位置
-        const x = window.innerWidth / 2 + (gamma / 90) * window.innerWidth / 2;
-        const y = window.innerHeight / 2 + (beta / 180) * window.innerHeight / 2;
+        const x = window.innerWidth / 2 + (enhancedGamma / 90) * window.innerWidth / 4;
+        const y = window.innerHeight / 2 + (enhancedBeta / 180) * window.innerHeight / 4;
         
         moveEyes(x, y);
       }
