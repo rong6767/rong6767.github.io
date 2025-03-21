@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eyes - Follow Me</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    
+    .eyes-container {
+      display: flex;
+      justify-content: space-between;
+      width: 300px;
+    }
+    
+    .eye {
+      width: 120px;
+      height: 120px;
+      background-color: #fff;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+    }
+    
+    .pupil {
+      width: 50px;
+      height: 50px;
+      background-color: #000;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.05s ease-out;
+    }
+    
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 15px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      text-decoration: none;
+      transition: background-color 0.3s;
+    }
+    
+    .back-button:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-button">⬅ Back</a>
+  
+  <div class="eyes-container">
+    <div class="eye">
+      <div class="pupil" id="left-pupil"></div>
+    </div>
+    <div class="eye">
+      <div class="pupil" id="right-pupil"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const leftPupil = document.getElementById('left-pupil');
+      const rightPupil = document.getElementById('right-pupil');
+      const eyes = document.querySelectorAll('.eye');
+      
+      // 最大移动范围（像素）
+      const maxMovement = 25;
+      
+      // 处理鼠标移动
+      document.addEventListener('mousemove', function(e) {
+        moveEyes(e.clientX, e.clientY);
+      });
+      
+      // 检测是否支持设备方向
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+      
+      // 处理设备方向变化
+      function handleOrientation(event) {
+        // 如果有鼠标交互过，则不响应设备方向
+        if (window.lastMouseInteraction && Date.now() - window.lastMouseInteraction < 5000) {
+          return;
+        }
+        
+        // 获取设备旋转角度
+        const beta = event.beta;  // 前后倾斜 (-180 到 180)
+        const gamma = event.gamma; // 左右倾斜 (-90 到 90)
+        
+        if (beta === null || gamma === null) return;
+        
+        // 将设备方向映射到视口位置
+        const x = window.innerWidth / 2 + (gamma / 90) * window.innerWidth / 2;
+        const y = window.innerHeight / 2 + (beta / 180) * window.innerHeight / 2;
+        
+        moveEyes(x, y);
+      }
+      
+      // 移动眼睛函数
+      function moveEyes(mouseX, mouseY) {
+        // 记录最后一次鼠标交互时间
+        window.lastMouseInteraction = Date.now();
+        
+        // 对每只眼睛进行处理
+        eyes.forEach((eye, index) => {
+          // 获取眼睛的位置和尺寸
+          const eyeRect = eye.getBoundingClientRect();
+          const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+          const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+          
+          // 计算鼠标与眼睛中心的距离
+          const deltaX = mouseX - eyeCenterX;
+          const deltaY = mouseY - eyeCenterY;
+          
+          // 计算角度和距离
+          const angle = Math.atan2(deltaY, deltaX);
+          const distance = Math.min(Math.hypot(deltaX, deltaY) / 15, 1);
+          
+          // 根据角度和距离计算瞳孔应该移动的位置
+          const moveX = Math.cos(angle) * maxMovement * distance;
+          const moveY = Math.sin(angle) * maxMovement * distance;
+          
+          // 获取对应的瞳孔元素
+          const pupil = index === 0 ? leftPupil : rightPupil;
+          
+          // 设置瞳孔位置
+          pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+        });
+      }
+    });
+  </script>
+</body>
+</html> 
